@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpc.h"
+#include "lval.h"
+#include "constructors.h"
 
 #ifdef _WIN32
 #include <string.h>
@@ -24,11 +26,6 @@ void add_history(char* unused) {}
 #include <editline/readline.h>
 #endif
 
-/* Forward Declarations */
-struct lval;
-struct lenv;
-typedef struct lval lval;
-typedef struct lenv lenv;
 
 void lval_print(lval* v);
 lval* lval_eval(lenv* e, lval* v);
@@ -36,14 +33,6 @@ lval* lval_join(lval* x, lval* y);
 
 
 /* Lisp Value */
-enum {
-    LVAL_NUM,
-    LVAL_ERR,
-    LVAL_SYM,
-    LVAL_FUN,
-    LVAL_SEXPR,
-    LVAL_QEXPR
-};
 
 char* ltype_name(int t) {
     switch(t) {
@@ -55,122 +44,6 @@ char* ltype_name(int t) {
         case LVAL_QEXPR: return "Q-Expression";
         default: return "Unkown";
     }
-}
-
-typedef lval*(*lbuiltin)(lenv*, lval*);
-
-struct lval {
-    int type;
-
-    long num;
-    char* err;
-    char* sym;
-    lbuiltin fun;
-
-    int count;
-    struct lval** cell;
-};
-
-struct lenv {
-    int count;
-    char** syms;
-    lval** vals;
-};
-
-lenv* lenv_new() {
-    lenv* e = malloc(sizeof(lenv));
-    e->count = 0;
-    e->syms = NULL;
-    e->vals = NULL;
-    return e;
-}
-
-/* Construct a pointer to a new Number lval */
-lval* lval_num(long x) {
-    lval* v = malloc(sizeof(lval));
-    v->type = LVAL_NUM;
-    v->num = x;
-    return v;
-}
-
-/* Construct a pointer to a new Error lval */
-lval* lval_err(char* fmt, ...) {
-    lval* v = malloc(sizeof(lval));
-    v->type = LVAL_ERR;
-
-    /* Create a va list and initialize it */
-    va_list va;
-    va_start(va, fmt);
-
-    /* Allocate 512 bytes of space */
-    v->err = malloc(512);
-
-    /* printf the error string with a maximum of 511 characters */
-    vsnprintf(v->err, 511, fmt, va);
-
-    /* Reallocate to number of bytes actually used */
-    v->err = realloc(v->err, strlen(v->err)+1);
-
-    /* Cleanup our va list */
-    va_end(va);
-    return v;
-}
-
-/* Construct a pointer to a new Symbol lval */
-lval* lval_sym(char* s) {
-    lval* v = malloc(sizeof(lval));
-    v->type = LVAL_SYM;
-    v->sym = malloc(strlen(s) + 1);
-    strcpy(v->sym, s);
-    return v;
-}
-
-/* Construct a pointer to a new empty Sexpr lval */
-lval* lval_sexpr() {
-    lval* v = malloc(sizeof(lval));
-    v->type = LVAL_SEXPR;
-    v->count = 0;
-    v->cell = NULL;
-    return v;
-}
-
-/* Construct a pointer to a new empty Qexpr lval */
-lval* lval_qexpr() {
-    lval* v = malloc(sizeof(lval));
-    v->type = LVAL_QEXPR;
-    v->count = 0;
-    v->cell = NULL;
-    return v;
-}
-
-lval* lval_fun(lbuiltin func) {
-    lval* v = malloc(sizeof(lval));
-    v->type = LVAL_FUN;
-    v->fun = func;
-    return v;
-}
-
-void lval_del(lval* v) {
-    switch (v->type) {
-        /* Do nothing special for number or fun types */
-        case LVAL_NUM: 
-        case LVAL_FUN:
-            break;
-        /* For Err or Sym free the string data */
-        case LVAL_ERR: free(v->err); break;
-        case LVAL_SYM: free(v->sym); break;
-        /* If Qexp or Sexp then delete all elements inside */
-        case LVAL_QEXPR:
-        case LVAL_SEXPR:
-            for (int i = 0; i < v->count; i++) {
-                lval_del(v->cell[i]);
-            }
-            /* Also free the memory allocated to contain the pointers */
-            free(v->cell);
-            break;
-    }
-    /* Free the memory allocated for the "lval" struct itself */
-    free(v);
 }
 
 lval* lval_read_num(mpc_ast_t* t) {
@@ -286,7 +159,7 @@ lval* builtin_tail(lenv* e, lval* a) {
     LASSERT(a, a->count == 1, "Function 'tail' passed too many arguments. Got %i, expected %i.", a->count, 1);
     LASSERT(a, a->cell[0]->type == LVAL_QEXPR, "Function 'tail' passed incorrect types. Got %s, expected %s", ltype_name(a->cell[0]->type), ltype_name(LVAL_QEXPR));
     LASSERT(a, a->cell[0]->count != 0, "Function 'tail' passed {}!");
-    
+
     lval* v = lval_take(a, 0);
     lval_del(lval_pop(v, 0));
     return v;
@@ -342,7 +215,7 @@ lval* builtin_op(lenv* e, lval* a, char* op) {
         if (strcmp(op, "+") == 0) { x->num += y->num; }
         if (strcmp(op, "-") == 0) { x->num -= y->num; }
         if (strcmp(op, "*") == 0) { x->num *= y->num; }
-        if (strcmp(op, "/") == 0) { 
+        if (strcmp(op, "/") == 0) {
             if (y->num == 0) {
                 lval_del(x);
                 lval_del(y);
@@ -430,7 +303,7 @@ lval* lval_eval_sexpr(lenv* e, lval* v) {
     for (int i = 0; i < v->count; i++) {
         v->cell[i] = lval_eval(e, v->cell[i]);
     }
-    
+
     /* Error checking */
     for (int i = 0; i < v->count; i++) {
         if (v->cell[i]->type == LVAL_ERR) { return lval_take(v, i); }
@@ -503,8 +376,8 @@ lval* lval_eval(lenv* e, lval* v) {
         lval_del(v);
         return x;
     }
-    if (v->type == LVAL_SEXPR) { 
-        return lval_eval_sexpr(e, v); 
+    if (v->type == LVAL_SEXPR) {
+        return lval_eval_sexpr(e, v);
     }
     /* All other lval types remain the same */
     return v;

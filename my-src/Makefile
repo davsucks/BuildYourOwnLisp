@@ -3,7 +3,8 @@ CFLAGS = -std=c99 -Wall -g
 LFLAGS = -ledit -lm
 FILES = hello_world parsing
 PLATFORM = $(shell uname)
-DEPS = mpc.c
+DEPS = lval.h lenv.h
+OBJ = parsing.o constructors.o mpc.o
 
 ifeq ($(findstring Linux,$(PLATFORM)),Linux)
 	LFLAGS += -ledit -lm
@@ -13,11 +14,15 @@ ifeq ($(findstring Darwin,$(PLATFORM)),Darwin)
 	LFLAGS += -ledit -lm
 endif
 
-all: $(FILES)
+%.o: %.c $(DEPS)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-%: %.c $(DEPS)
+parsing: $(OBJ)
 	$(CC) $(CFLAGS) $^ $(LFLAGS) -o $@
 
+.PHONY: clean
+
 clean:
+	rm *.o
 	rm $(FILES)
 

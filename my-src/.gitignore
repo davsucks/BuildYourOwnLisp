@@ -1,4 +1,7 @@
 hello_world
 parsing
+mpc
+
 *.dSYM
+*.o
 
