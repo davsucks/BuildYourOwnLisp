@@ -4,6 +4,6 @@ project(BuildYourOwnLisp)
 
 include_directories("${PROJECT_SOURCE_DIR}")
 
-add_executable(parsing parsing.c constructors.c lval.h mpc.c)
+add_executable(main main.c parsing.c lenv.c lval.c mpc.c builtins.c)
 
-target_link_libraries(parsing PUBLIC edit)
+target_link_libraries(main PUBLIC edit)

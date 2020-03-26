@@ -1,13 +1,7 @@
 #ifndef LVAL_H
 #define LVAL_H
 
-/* Forward Declarations */
-struct lval;
-struct lenv;
-typedef struct lval lval;
-typedef struct lenv lenv;
-
-typedef lval *(*lbuiltin)(lenv *, lval *);
+#include "builtins.h"
 
 enum {
     LVAL_NUM,
@@ -30,10 +24,41 @@ struct lval {
     struct lval **cell;
 };
 
-struct lenv {
-    int count;
-    char **syms;
-    lval **vals;
-};
+// Utils
+char *ltype_name(int t);
+
+void lval_print(lval *v);
+
+void lval_println(lval *v);
+
+// Constructors
+lval *lval_num(long x);
+
+lval *lval_err(char *fmt, ...);
+
+lval *lval_sym(char *s);
+
+lval *lval_sexpr();
+
+lval *lval_qexpr();
+
+lval *lval_fun(lbuiltin func);
+
+// Operations
+lval *lval_add(lval *v, lval *x);
+
+lval *lval_copy(lval *v);
+
+lval *lval_pop(lval *v, int i);
+
+lval *lval_take(lval *v, int i);
+
+lval *lval_join(lval *x, lval *y);
+
+void lval_del(lval *v);
+
+lval *lval_eval(lenv *e, lval *v);
+
+lval *lval_eval_sexpr(lenv *e, lval *v);
 
 #endif
