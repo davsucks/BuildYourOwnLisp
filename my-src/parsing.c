@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpc.h"
-#include "lenv.h"
-#include "lval.h"
 
 #ifdef _WIN32
 #include <string.h>
@@ -27,6 +25,11 @@ void add_history(char* unused) {}
 #endif
 
 /* Forward Declarations */
+struct lval;
+struct lenv;
+typedef struct lval lval;
+typedef struct lenv lenv;
+
 void lval_print(lval* v);
 lval* lval_eval(lenv* e, lval* v);
 lval* lval_join(lval* x, lval* y);
@@ -53,6 +56,26 @@ char* ltype_name(int t) {
         default: return "Unkown";
     }
 }
+
+typedef lval*(*lbuiltin)(lenv*, lval*);
+
+struct lval {
+    int type;
+
+    long num;
+    char* err;
+    char* sym;
+    lbuiltin fun;
+
+    int count;
+    struct lval** cell;
+};
+
+struct lenv {
+    int count;
+    char** syms;
+    lval** vals;
+};
 
 lenv* lenv_new() {
     lenv* e = malloc(sizeof(lenv));
