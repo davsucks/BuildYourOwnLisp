@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
     /* Print Version and Exit information */
     puts("Lispy Version 0.0.0.0.1");
-    puts("Press Ctrl+c to Exit\n");
+    puts("Press Ctrl+c or type 'exit' to Exit\n");
 
     lenv *e = lenv_new();
     lenv_add_builtins(e);
@@ -62,6 +62,10 @@ int main(int argc, char **argv) {
 
         /* Output our prompt and get input */
         char *input = readline("lispy> ");
+
+        if (strcmp(input, "exit") == 0) {
+            break;
+        }
 
         /* Add input to history */
         add_history(input);
@@ -84,7 +88,7 @@ int main(int argc, char **argv) {
 
 
     /* Undefine and Delete our Parsers and environment */
-    mpc_cleanup(5, Number, Symbol, Sexpr, Qexpr, Expr, Lispy);
+    mpc_cleanup(6, Number, Symbol, Sexpr, Qexpr, Expr, Lispy);
     lenv_del(e);
 
     return 0;
