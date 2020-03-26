@@ -5,3 +5,4 @@ mpc
 *.dSYM
 *.o
 
+cmake-build-debug
