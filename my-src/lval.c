@@ -15,6 +15,8 @@ char *ltype_name(int t) {
             return "Error";
         case LVAL_SYM:
             return "Symbol";
+        case LVAL_STR:
+            return "String";
         case LVAL_SEXPR:
             return "S-Expression";
         case LVAL_QEXPR:
@@ -38,6 +40,17 @@ void lval_expr_print(lval *v, char open, char close) {
     putchar(close);
 }
 
+void lval_print_str(lval *v) {
+    // make a copy of the string
+    char *escaped = malloc(strlen(v->str) + 1);
+    strcpy(escaped, v->str);
+    // escape it
+    escaped = mpcf_escape(escaped);
+    // print it between " characters
+    printf("\"%s\"", escaped);
+    free(escaped);
+}
+
 /* Print an "lval" */
 void lval_print(lval *v) {
     switch (v->type) {
@@ -49,6 +62,9 @@ void lval_print(lval *v) {
             break;
         case LVAL_SYM:
             printf("%s", v->sym);
+            break;
+        case LVAL_STR:
+            lval_print_str(v);
             break;
         case LVAL_FUN:
             if (v->builtin) {
@@ -113,6 +129,14 @@ lval *lval_sym(char *s) {
     v->type = LVAL_SYM;
     v->sym = malloc(strlen(s) + 1);
     strcpy(v->sym, s);
+    return v;
+}
+
+lval *lval_str(char *s) {
+    lval *v = malloc(sizeof(lval));
+    v->type = LVAL_STR;
+    v->str = malloc(strlen(s) + 1);
+    strcpy(v->str, s);
     return v;
 }
 
@@ -187,6 +211,10 @@ lval *lval_copy(lval *v) {
         case LVAL_SYM:
             x->sym = malloc(strlen(v->sym) + 1);
             strcpy(x->sym, v->sym);
+            break;
+        case LVAL_STR:
+            x->str = malloc(strlen(v->str) + 1);
+            strcpy(x->str, v->str);
             break;
 
             /* Copy lists by copying each sub-expression */
@@ -327,6 +355,9 @@ void lval_del(lval *v) {
         case LVAL_SYM:
             free(v->sym);
             break;
+        case LVAL_STR:
+            free(v->str);
+            break;
             /* If Qexp or Sexp then delete all elements inside */
         case LVAL_QEXPR:
         case LVAL_SEXPR:
@@ -394,6 +425,8 @@ int lval_eq(lval *x, lval *y) {
             return strcmp(x->err, y->err) == 0;
         case LVAL_SYM:
             return strcmp(x->sym, y->sym) == 0;
+        case LVAL_STR:
+            return strcmp(x->str, y->str) == 0;
         case LVAL_FUN:
             if (x->builtin || y->builtin) {
                 return x->builtin == y->builtin;
