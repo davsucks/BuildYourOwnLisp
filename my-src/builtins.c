@@ -208,12 +208,32 @@ lval *builtin_cmp(lenv *e, lval *a, char *op) {
     return lval_num(r);
 }
 
-lval* builtin_eq(lenv* e, lval* a) {
+lval *builtin_eq(lenv *e, lval *a) {
     return builtin_cmp(e, a, "==");
 }
 
-lval* builtin_ne(lenv* e, lval* a) {
+lval *builtin_ne(lenv *e, lval *a) {
     return builtin_cmp(e, a, "!=");
+}
+
+lval *builtin_if(lenv *e, lval *a) {
+    LASSERT_NUM("if", a, 3)
+    LASSERT_TYPE("if", a, 0, LVAL_NUM)
+    LASSERT_TYPE("if", a, 1, LVAL_QEXPR)
+    LASSERT_TYPE("if", a, 2, LVAL_QEXPR)
+
+    // mark both expressions as evaluable
+    a->cell[1]->type = LVAL_SEXPR;
+    a->cell[2]->type = LVAL_SEXPR;
+
+    lval *result;
+    if (a->cell[0]->num) {
+        result = lval_eval(e, lval_pop(a, 1));
+    } else {
+        result = lval_eval(e, lval_pop(a, 2));
+    }
+    lval_del(a);
+    return result;
 }
 
 lval *builtin_def(lenv *e, lval *a) {
