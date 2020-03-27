@@ -31,6 +31,8 @@ lval *builtin_div(lenv *e, lval *a);
 
 lval *builtin_def(lenv *e, lval *a);
 
-lval *builtin(lenv *e, lval *a, char *func);
+lval *builtin_put(lenv *e, lval *a);
+
+lval *builtin_lambda(lenv *e, lval *a);
 
 #endif

@@ -15,11 +15,18 @@ enum {
 struct lval {
     int type;
 
+    // Basic
     long num;
     char *err;
     char *sym;
-    lbuiltin fun;
 
+    // Function
+    lbuiltin builtin;
+    lenv *env;
+    lval *formals;
+    lval *body;
+
+    // Expression
     int count;
     struct lval **cell;
 };
@@ -42,7 +49,9 @@ lval *lval_sexpr();
 
 lval *lval_qexpr();
 
-lval *lval_fun(lbuiltin func);
+lval *lval_fun(lbuiltin builtin);
+
+lval* lval_lambda(lval* formals, lval* body);
 
 // Operations
 lval *lval_add(lval *v, lval *x);
@@ -54,6 +63,8 @@ lval *lval_pop(lval *v, int i);
 lval *lval_take(lval *v, int i);
 
 lval *lval_join(lval *x, lval *y);
+
+lval* lval_call(lenv* e, lval* f, lval* a);
 
 void lval_del(lval *v);
 

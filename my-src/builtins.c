@@ -118,35 +118,57 @@ lval *builtin_div(lenv *e, lval *a) {
     return builtin_op(e, a, "/");
 }
 
-lval *builtin(lenv *e, lval *a, char *func) {
-    if (strcmp("list", func) == 0) { return builtin_list(e, a); }
-    if (strcmp("head", func) == 0) { return builtin_head(e, a); }
-    if (strcmp("tail", func) == 0) { return builtin_tail(e, a); }
-    if (strcmp("join", func) == 0) { return builtin_join(e, a); }
-    if (strcmp("eval", func) == 0) { return builtin_eval(e, a); }
-    if (strstr("+-/*", func)) { return builtin_op(e, a, func); }
-    lval_del(a);
-    return lval_err("Unknown function!");
-}
-
-lval *builtin_def(lenv *e, lval *a) {
+lval *builtin_var(lenv *e, lval *a, char *func) {
     LASSERT(a, a->cell[0]->type == LVAL_QEXPR, "Function 'def' passed incorrect type!");
 
-    /* First argument is symbol list */
     lval *syms = a->cell[0];
-    /* Ensure all elements of first list are symbols */
     for (int i = 0; i < syms->count; i++) {
         LASSERT(a, syms->cell[i]->type == LVAL_SYM, "Function 'def' cannot define non-symbol");
     }
+    LASSERT(a, syms->count == a->count - 1,
+            "Function 'def' cannot take incorrect number of values to symbols. Got %s, expected %s", syms->count,
+            a->count - 1)
 
-    /* Check correct number of symbols and values */
-    LASSERT(a, syms->count == a->count - 1, "Function 'def' cannot take incorrect number of values to symbols");
-
-    /* Assign copies of values to symbols */
     for (int i = 0; i < syms->count; i++) {
-        lenv_put(e, syms->cell[i], a->cell[i + 1]);
+        // If 'def' define it globally, else define locally
+        if (strcmp(func, "def") == 0) {
+            lenv_def(e, syms->cell[i], a->cell[i + 1]);
+        }
+        if (strcmp(func, "=") == 0) {
+            lenv_put(e, syms->cell[i], a->cell[i + 1]);
+        }
     }
     lval_del(a);
     return lval_sexpr();
+}
+
+lval *builtin_def(lenv *e, lval *a) {
+    return builtin_var(e, a, "def");
+}
+
+lval *builtin_put(lenv *e, lval *a) {
+    return builtin_var(e, a, "=");
+}
+
+lval *builtin_lambda(lenv *e, lval *a) {
+    /* check that both arguments are q-expressions */
+    LASSERT(a, a->count == 2, "Function 'lambda' passed incorrect number of arguments. Got %i, expected 2", a->count)
+    for (int i = 0; i < 2; i++) {
+        LASSERT(a, a->cell[i]->type == LVAL_QEXPR,
+                "Function 'lambda' passed incorrect type at argument %i. Got %s, expected %s", i,
+                ltype_name(a->cell[i]->type), ltype_name(LVAL_QEXPR))
+    }
+    // Check the first q-expression contains only symbols
+    for (int i = 0; i < a->cell[0]->count; i++) {
+        LASSERT(a, a->cell[0]->cell[i]->type == LVAL_SYM, "Cannot define non-symbol. Got %s, expected %s",
+                ltype_name(a->cell[0]->cell[i]->type), ltype_name(LVAL_SYM))
+    }
+
+    // Pop the first two arguments and pass them to lval_lambda
+    lval *formals = lval_pop(a, 0);
+    lval *body = lval_pop(a, 0);
+    lval_del(a);
+
+    return lval_lambda(formals, body);
 }
 

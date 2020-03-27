@@ -51,7 +51,15 @@ void lval_print(lval *v) {
             printf("%s", v->sym);
             break;
         case LVAL_FUN:
-            printf("<function>");
+            if (v->builtin) {
+                printf("<function>");
+            } else {
+                printf("(\\ ");
+                lval_print(v->formals);
+                putchar(' ');
+                lval_print(v->body);
+                putchar(')');
+            }
             break;
         case LVAL_SEXPR:
             lval_expr_print(v, '(', ')');
@@ -126,10 +134,22 @@ lval *lval_qexpr() {
     return v;
 }
 
-lval *lval_fun(lbuiltin func) {
+lval *lval_fun(lbuiltin builtin) {
     lval *v = malloc(sizeof(lval));
     v->type = LVAL_FUN;
-    v->fun = func;
+    v->builtin = builtin;
+    return v;
+}
+
+lval *lval_lambda(lval *formals, lval *body) {
+    lval *v = malloc(sizeof(lval));
+    v->type = LVAL_FUN;
+
+    // Builtin being defined is how we know if it's a user function or a builtin
+    v->builtin = NULL;
+    v->env = lenv_new();
+    v->formals = formals;
+    v->body = body;
     return v;
 }
 
@@ -146,7 +166,14 @@ lval *lval_copy(lval *v) {
     switch (v->type) {
         /* Copy functions and numbers directly */
         case LVAL_FUN:
-            x->fun = v->fun;
+            if (v->builtin) {
+                x->builtin = v->builtin;
+            } else {
+                x->builtin = NULL;
+                x->env = lenv_copy(v->env);
+                x->formals = lval_copy(v->formals);
+                x->body = lval_copy(v->body);
+            }
             break;
         case LVAL_NUM:
             x->num = v->num;
@@ -209,11 +236,58 @@ lval *lval_join(lval *x, lval *y) {
     return x;
 }
 
+lval *lval_call(lenv *e, lval *f, lval *a) {
+    // if builtin then just call that
+    if (f->builtin) { return f->builtin(e, a); }
+
+    // record argument counts
+    int given = a->count;
+    int total = f->formals->count;
+
+    // while arguments still remain to be processed
+    while (a->count) {
+        // if we've run out of formal arguments to bind
+        if (f->formals->count == 0) {
+            lval_del(a);
+            return lval_err("Function passed too many arguments. Got %i, expected %i.", given, total);
+        }
+
+        // pop the first symbol from the formals
+        lval *sym = lval_pop(f->formals, 0);
+        // pop the next argument from the list
+        lval *val = lval_pop(a, 0);
+        // bind a copy into the functions environment
+        lenv_put(f->env, sym, val);
+        // delete a symbol and value
+        lval_del(sym);
+        lval_del(val);
+    }
+
+    // argument list is now bound and can be cleaned up
+    lval_del(a);
+
+    // if all formals have been bound: evaluate
+    if (f->formals->count == 0) {
+        // set environment parent to evaluation environment
+        f->env->parent = e;
+        // evaluate and return
+        return builtin_eval(f->env, lval_add(lval_sexpr(), lval_copy(f->body)));
+    }
+    // otherwise return partially bound function
+    return lval_copy(f);
+}
+
 void lval_del(lval *v) {
     switch (v->type) {
         /* Do nothing special for number or fun types */
         case LVAL_NUM:
+            break;
         case LVAL_FUN:
+            if (!v->builtin) {
+                lenv_del(v->env);
+                lval_del(v->formals);
+                lval_del(v->body);
+            }
             break;
             /* For Err or Sym free the string data */
         case LVAL_ERR:
@@ -272,7 +346,7 @@ lval *lval_eval_sexpr(lenv *e, lval *v) {
     }
 
     /* Call function to get result */
-    lval *result = f->fun(e, v);
+    lval *result = lval_call(e, f, v);
     lval_del(f);
     return result;
 }

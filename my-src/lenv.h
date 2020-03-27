@@ -4,6 +4,7 @@
 #include "lval.h"
 
 struct lenv {
+    lenv *parent;
     int count;
     char **syms;
     lval **vals;
@@ -11,9 +12,13 @@ struct lenv {
 
 lenv *lenv_new();
 
+lenv *lenv_copy(lenv *e);
+
 lval *lenv_get(lenv *e, lval *k);
 
 void lenv_put(lenv *e, lval *k, lval *v);
+
+void lenv_def(lenv *e, lval *k, lval *v);
 
 void lenv_add_builtins(lenv *e);
 
