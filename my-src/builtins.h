@@ -49,4 +49,10 @@ lval *builtin_put(lenv *e, lval *a);
 
 lval *builtin_lambda(lenv *e, lval *a);
 
+lval *builtin_load(lenv *e, lval *a);
+
+lval *builtin_print(lenv *e, lval *a);
+
+lval *builtin_error(lenv *e, lval *a);
+
 #endif

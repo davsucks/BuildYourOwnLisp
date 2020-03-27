@@ -2,6 +2,8 @@
 #include "mpc.h"
 #include "lval.h"
 #include "lenv.h"
+#include "main.h"
+#include "parsing.h"
 
 #define LASSERT(args, cond, fmt, ...) \
     if (!(cond)) { \
@@ -266,3 +268,66 @@ lval *builtin_lambda(lenv *e, lval *a) {
     return lval_lambda(formals, body);
 }
 
+lval *builtin_load(lenv *e, lval *a) {
+    LASSERT_NUM("load", a, 1)
+    LASSERT_TYPE("load", a, 0, LVAL_STR)
+
+    // parse file given by string name
+    mpc_result_t r;
+    if (mpc_parse_contents(a->cell[0]->str, Lispy, &r)) {
+        // read contents
+        lval *expr = lval_read(r.output);
+        mpc_ast_delete(r.output);
+
+        // evaluate each expression
+        while (expr->count) {
+            lval *x = lval_eval(e, lval_pop(expr, 0));
+            // if evaluation leads to an error print it
+            if (x->type == LVAL_ERR) { lval_println(x); }
+            lval_del(x);
+        }
+
+        // delete expressions and arguments
+        lval_del(expr);
+        lval_del(a);
+
+        // return empty list
+        return lval_sexpr();
+    } else {
+        // get parse error as string
+        char *error_message = mpc_err_string(r.error);
+        mpc_err_delete(r.error);
+
+        // create new error message using it
+        lval *err = lval_err("Could not load Library %s", error_message);
+        free(error_message);
+        lval_del(a);
+        return err;
+    }
+}
+
+lval *builtin_print(lenv *e, lval *a) {
+    // print each argument followed by a space
+    for (int i = 0; i < a->count; i++) {
+        lval_print(a->cell[i]);
+        putchar(' ');
+    }
+
+    // print newline and delete arguments
+    putchar('\n');
+    lval_del(a);
+
+    return lval_sexpr();
+}
+
+lval *builtin_error(lenv *e, lval *a) {
+    LASSERT_NUM("error", a, 1)
+    LASSERT_TYPE("error", a, 0, LVAL_STR)
+
+    // construct error from first argument
+    lval *err = lval_err(a->cell[0]->str);
+
+    // delete arguments and return
+    lval_del(a);
+    return err;
+}
