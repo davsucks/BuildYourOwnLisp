@@ -382,7 +382,31 @@ lval *lval_eval_sexpr(lenv *e, lval *v) {
     return result;
 }
 
-lval *lval_greater_than(lenv *e, lval *v) {
-    // ensure that v has two argumemts that are numbers
+int lval_eq(lval *x, lval *y) {
+    // Different types of lval are always unequal
+    if (x->type != y->type) { return 0; }
 
+    // compare based on type
+    switch (x->type) {
+        case LVAL_NUM:
+            return x->num == y->num;
+        case LVAL_ERR:
+            return strcmp(x->err, y->err) == 0;
+        case LVAL_SYM:
+            return strcmp(x->sym, y->sym) == 0;
+        case LVAL_FUN:
+            if (x->builtin || y->builtin) {
+                return x->builtin == y->builtin;
+            }
+            return lval_eq(x->formals, y->formals) && lval_eq(x->body, y->body);
+        case LVAL_QEXPR:
+        case LVAL_SEXPR:
+            if (x->count != y->count) { return 0; }
+            for (int i = 0; i < x->count; i++) {
+                // if any element is not equal then whole list is not equal
+                if (!lval_eq(x->cell[i], y->cell[i])) { return 0; }
+            }
+            return 1;
+    }
+    return 0;
 }

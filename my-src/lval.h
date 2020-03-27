@@ -72,6 +72,6 @@ lval *lval_eval(lenv *e, lval *v);
 
 lval *lval_eval_sexpr(lenv *e, lval *v);
 
-lval *lval_greater_than(lenv *e, lval *v);
+int lval_eq(lval *x, lval *y);
 
 #endif

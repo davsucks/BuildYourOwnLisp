@@ -193,14 +193,27 @@ lval *builtin_le(lenv *e, lval *a) {
     return builtin_ord(e, a, "<=");
 }
 
-lval *builtin_eq(lenv *e, lval *a) {
-    LASSERT_NUM("eq", a, 2)
-    LASSERT_TYPE("eq", a, 0, LVAL_NUM)
-    LASSERT_TYPE("eq", a, 1, LVAL_NUM)
-
-    int r = a->cell[0]->num == a->cell[1]->num;
+lval *builtin_cmp(lenv *e, lval *a, char *op) {
+    LASSERT_NUM(op, a, 2)
+    int r;
+    if (strcmp(op, "==") == 0) {
+        r = lval_eq(a->cell[0], a->cell[1]);
+    } else if (strcmp(op, "!=") == 0) {
+        r = !lval_eq(a->cell[0], a->cell[1]);
+    } else {
+        // shouldn't happen
+        return lval_err("'%s' is unknown comparison.", op);
+    }
     lval_del(a);
     return lval_num(r);
+}
+
+lval* builtin_eq(lenv* e, lval* a) {
+    return builtin_cmp(e, a, "==");
+}
+
+lval* builtin_ne(lenv* e, lval* a) {
+    return builtin_cmp(e, a, "!=");
 }
 
 lval *builtin_def(lenv *e, lval *a) {
