@@ -51,7 +51,7 @@ lval *lval_qexpr();
 
 lval *lval_fun(lbuiltin builtin);
 
-lval* lval_lambda(lval* formals, lval* body);
+lval *lval_lambda(lval *formals, lval *body);
 
 // Operations
 lval *lval_add(lval *v, lval *x);
@@ -64,12 +64,14 @@ lval *lval_take(lval *v, int i);
 
 lval *lval_join(lval *x, lval *y);
 
-lval* lval_call(lenv* e, lval* f, lval* a);
+lval *lval_call(lenv *e, lval *f, lval *a);
 
 void lval_del(lval *v);
 
 lval *lval_eval(lenv *e, lval *v);
 
 lval *lval_eval_sexpr(lenv *e, lval *v);
+
+lval *lval_greater_than(lenv *e, lval *v);
 
 #endif

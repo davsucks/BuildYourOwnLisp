@@ -381,3 +381,8 @@ lval *lval_eval_sexpr(lenv *e, lval *v) {
     lval_del(f);
     return result;
 }
+
+lval *lval_greater_than(lenv *e, lval *v) {
+    // ensure that v has two argumemts that are numbers
+
+}

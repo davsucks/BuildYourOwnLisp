@@ -153,6 +153,46 @@ lval *builtin_var(lenv *e, lval *a, char *func) {
     return lval_sexpr();
 }
 
+lval *builtin_ord(lenv *e, lval *a, char *op) {
+    // check that there are two arguments and they're both numbers
+    LASSERT_NUM(op, a, 2)
+    LASSERT_TYPE(op, a, 0, LVAL_NUM)
+    LASSERT_TYPE(op, a, 1, LVAL_NUM)
+
+    int r;
+    if (strcmp(op, ">") == 0) {
+        r = a->cell[0]->num > a->cell[1]->num;
+    } else if (strcmp(op, "<") == 0) {
+        r = a->cell[0]->num < a->cell[1]->num;
+    } else if (strcmp(op, ">=") == 0) {
+        r = a->cell[0]->num >= a->cell[1]->num;
+    } else if (strcmp(op, "<=") == 0) {
+        r = a->cell[0]->num <= a->cell[1]->num;
+    } else {
+        // should never happen
+        return lval_err("'%s' is not a known ordering", op);
+    }
+
+    lval_del(a);
+    return lval_num(r);
+}
+
+lval *builtin_gt(lenv *e, lval *a) {
+    return builtin_ord(e, a, ">");
+}
+
+lval *builtin_lt(lenv *e, lval *a) {
+    return builtin_ord(e, a, "<");
+}
+
+lval *builtin_ge(lenv *e, lval *a) {
+    return builtin_ord(e, a, ">=");
+}
+
+lval *builtin_le(lenv *e, lval *a) {
+    return builtin_ord(e, a, "<=");
+}
+
 lval *builtin_def(lenv *e, lval *a) {
     return builtin_var(e, a, "def");
 }
