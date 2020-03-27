@@ -193,6 +193,16 @@ lval *builtin_le(lenv *e, lval *a) {
     return builtin_ord(e, a, "<=");
 }
 
+lval *builtin_eq(lenv *e, lval *a) {
+    LASSERT_NUM("eq", a, 2)
+    LASSERT_TYPE("eq", a, 0, LVAL_NUM)
+    LASSERT_TYPE("eq", a, 1, LVAL_NUM)
+
+    int r = a->cell[0]->num == a->cell[1]->num;
+    lval_del(a);
+    return lval_num(r);
+}
+
 lval *builtin_def(lenv *e, lval *a) {
     return builtin_var(e, a, "def");
 }

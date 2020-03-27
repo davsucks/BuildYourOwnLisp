@@ -37,6 +37,8 @@ lval *builtin_ge(lenv *e, lval *a);
 
 lval *builtin_le(lenv *e, lval *a);
 
+lval *builtin_eq(lenv *e, lval *a);
+
 lval *builtin_def(lenv *e, lval *a);
 
 lval *builtin_put(lenv *e, lval *a);

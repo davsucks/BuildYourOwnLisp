@@ -86,6 +86,7 @@ void lenv_add_builtins(lenv *e) {
     lenv_add_builtin(e, "<", builtin_lt);
     lenv_add_builtin(e, ">=", builtin_ge);
     lenv_add_builtin(e, "<=", builtin_le);
+    lenv_add_builtin(e, "==", builtin_eq);
 
     /* Variable functions */
     lenv_add_builtin(e, "def", builtin_def);
