@@ -1,10 +1,10 @@
 package buildyourownkotlinlisp
 
 import KotlispyLexer
-import org.antlr.v4.parse.ANTLRLexer.WS
-import org.antlr.v4.runtime.CharStreams
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import org.antlr.v4.parse.ANTLRLexer.WS
+import org.antlr.v4.runtime.CharStreams
 
 class KotlispyLexerTest {
 

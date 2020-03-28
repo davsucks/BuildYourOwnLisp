@@ -4,7 +4,11 @@ plugins {
 
     // Apply the application plugin to add support for building a CLI application.
     application
+    // antlr is a lexing and parsing library
     antlr
+
+    // ktlint is a kotlin linting library
+    id("org.jlleitschuh.gradle.ktlint") version "9.2.1"
 }
 
 repositories {
