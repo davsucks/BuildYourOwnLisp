@@ -4,15 +4,19 @@ plugins {
 
     // Apply the application plugin to add support for building a CLI application.
     application
+    antlr
 }
 
 repositories {
     // Use jcenter for resolving dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    mavenCentral()
 }
 
 dependencies {
+    antlr("org.antlr:antlr4:4.8")
+
     // Align versions of all Kotlin components
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
