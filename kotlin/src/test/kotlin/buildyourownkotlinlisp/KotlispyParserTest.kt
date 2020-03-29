@@ -2,6 +2,7 @@ package buildyourownkotlinlisp
 
 import KotlispyLexer
 import KotlispyParser
+import buildyourownkotlinlisp.parser.toParseTree
 import kotlin.test.Test
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream

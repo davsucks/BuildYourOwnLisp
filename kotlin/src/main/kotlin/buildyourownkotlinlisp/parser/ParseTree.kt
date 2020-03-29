@@ -1,17 +1,15 @@
-package buildyourownkotlinlisp
+package buildyourownkotlinlisp.parser
 
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 
-abstract class ParseTreeElement {
+sealed class ParseTreeElement {
     abstract fun multiLineString(indentation: String = ""): String
 }
-
 class ParseTreeLeaf(private val text: String) : ParseTreeElement() {
     override fun multiLineString(indentation: String): String = "${indentation}T[$text]\n"
     override fun toString(): String = "T$text"
 }
-
 class ParseTreeNode(private val name: String) : ParseTreeElement() {
     private val children = mutableListOf<ParseTreeElement>()
 
@@ -33,7 +31,8 @@ class ParseTreeNode(private val name: String) : ParseTreeElement() {
 }
 
 fun toParseTree(node: ParserRuleContext): ParseTreeNode {
-    val res = ParseTreeNode(node.javaClass.simpleName.removeSuffix("Context"))
+    val res =
+        ParseTreeNode(node.javaClass.simpleName.removeSuffix("Context"))
     node.children.forEach { c ->
         when (c) {
             is ParserRuleContext -> res.child(toParseTree(c))
