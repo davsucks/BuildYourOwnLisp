@@ -44,8 +44,19 @@ val run by tasks.getting(JavaExec::class) {
 }
 
 tasks {
+    val antlrBuild = named("generateGrammarSource")
+    val format = named("ktlintFormat")
+    val build = named("build") {
+        dependsOn(format, antlrBuild)
+        mustRunAfter(format, antlrBuild)
+    }
+
     named<Test>("test") {
-        val antlrBuild = named("generateGrammarSource")
         mustRunAfter(antlrBuild)
+    }
+
+    val precommit by registering {
+        mustRunAfter(build)
+        dependsOn(build)
     }
 }
