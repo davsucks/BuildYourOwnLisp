@@ -26,21 +26,21 @@ class KotlispyLexerTest {
 
     @Test
     fun `it should parse a number`() {
-        assertEquals(listOf("NUMBER", "EOF"), tokens(lexerForCode("0")))
+        assertEquals(listOf("DIGIT", "EOF"), tokens(lexerForCode("0")))
     }
 
     @Test
     fun `it should parse lots of numbers`() {
-        assertEquals(listOf("NUMBER", "NUMBER", "NUMBER", "EOF"), tokens(lexerForCode("100 200 4324892")))
+        assertEquals(listOf("DIGIT", "DIGIT", "DIGIT", "EOF"), tokens(lexerForCode("100")))
     }
 
     @Test
     fun `it should parse an operator`() {
-        assertEquals(listOf("OPERATOR", "EOF"), tokens(lexerForCode("+")))
+        assertEquals(listOf("PLUS", "EOF"), tokens(lexerForCode("+")))
     }
 
     @Test
     fun `it should parse lots of operators`() {
-        assertEquals(listOf("OPERATOR", "OPERATOR", "OPERATOR", "OPERATOR", "EOF"), tokens(lexerForCode("+ - * /")))
+        assertEquals(listOf("PLUS", "MINUS", "MULT", "DIV", "EOF"), tokens(lexerForCode("+ - * /")))
     }
 }

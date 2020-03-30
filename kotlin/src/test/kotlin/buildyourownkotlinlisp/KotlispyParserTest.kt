@@ -16,21 +16,15 @@ class KotlispyParserTest {
         KotlispyParser(CommonTokenStream(lexerForResource()))
 
     @Test
-    fun `it should parse a few expressions`() {
+    fun `it should parse the plus operator`() {
         val actual = toParseTree(parseResource().lispy()).multiLineString()
-        val expected = """Lispy
- T[+]
- Expression
-  T[5]
- Expression
-  T[(]
-  T[*]
-  Expression
-   T[2]
-  Expression
-   T[2]
-  T[)]
- T[<EOF>]"""
-        assertThat(actual).contains(expected)
+        assertThat(actual).contains("Operator")
+        assertThat(actual).contains("T[+]")
+    }
+
+    @Test
+    fun `it should parse an expression`() {
+        val actual = toParseTree(parseResource().lispy()).multiLineString()
+        assertThat(actual).contains("Expression")
     }
 }

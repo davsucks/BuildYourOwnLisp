@@ -2,14 +2,21 @@ grammar Kotlispy;
 
 /* Parser rules */
 
-lispy: OPERATOR expression+ EOF ;
+lispy: operator expression+ EOF ;
 
-expression: NUMBER | '(' OPERATOR expression+ ')';
+operator: PLUS | MINUS | MULT | DIV;
+
+number: DIGIT+;
+
+expression: number | '(' operator expression+ ')';
 
 /* Lexer Rules */
 
-OPERATOR: '+' | '-' | '*' | '/';
+PLUS: '+';
+MINUS: '-' ;
+MULT: '*';
+DIV: '/';
 
-NUMBER: [0-9]+;
+DIGIT: [0-9];
 
 WS: [\t ]+ -> skip;

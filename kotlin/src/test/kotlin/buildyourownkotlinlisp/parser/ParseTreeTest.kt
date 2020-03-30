@@ -1,7 +1,7 @@
 package buildyourownkotlinlisp.parser
 
-import org.assertj.core.api.Assertions.assertThat
 import kotlin.test.Test
+import org.assertj.core.api.Assertions.assertThat
 
 internal class ParseTreeTest {
     @Test
