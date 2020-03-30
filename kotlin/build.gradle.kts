@@ -42,3 +42,11 @@ application {
 val run by tasks.getting(JavaExec::class) {
     standardInput = System.`in`
 }
+
+tasks {
+    named<Test>("test") {
+        val antlrBuild = named("generateGrammarSource")
+        mustRunAfter(antlrBuild)
+    }
+}
+
